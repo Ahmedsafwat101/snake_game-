@@ -1,0 +1,78 @@
+"""
+Earth moon sun
+"""
+
+import arcade
+
+SCREEN_WIDTH = 600
+SCREEN_HEIGHT = 600
+
+
+class MyGame(arcade.Window):
+    """ Main application class. """
+
+    def __init__(self):
+        # Call the parent class initializer
+        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, "Earth Moon Sun")
+        self.sun_x = SCREEN_WIDTH / 2
+        self.sun_y = SCREEN_HEIGHT / 2
+        self.earth_dist = 180
+        self.moon_dist = 40
+        self.sun_dia = 20
+        self.earth_dia = 10
+        self.moon_dia = 5
+
+        self.moon_shape_list = arcade.ShapeElementList()
+        moon = arcade.create_ellipse_filled(self.moon_dist, 0,
+                                            self.moon_dia, self.moon_dia, arcade.color.WHITE)
+        self.moon_shape_list.append(moon)
+
+        self.moon_angle = 0
+        self.earth_angle = 0
+
+        self.earth_shape_list = arcade.ShapeElementList()
+        sun = arcade.create_ellipse_filled(0, 0,
+                                           self.sun_dia, self.sun_dia, arcade.color.YELLOW)
+        earth = arcade.create_ellipse_filled(self.earth_dist, 0,
+                                             self.earth_dia, self.earth_dia, arcade.color.BRIGHT_GREEN)
+        self.earth_shape_list.append(sun)
+        self.earth_shape_list.append(earth)
+
+        self.earth_shape_list.center_x = self.sun_x
+        self.earth_shape_list.center_y = self.sun_y
+        self.moon_shape_list.center_x = self.sun_x + self.earth_dist
+        self.moon_shape_list.center_y = self.sun_y
+        arcade.set_background_color(arcade.color.DARK_MIDNIGHT_BLUE)
+
+    def on_draw(self):
+        """
+        Render the screen.
+        """
+
+        # This command has to happen before we start drawing
+        arcade.start_render()
+
+        self.earth_shape_list.draw()
+        self.moon_shape_list.draw()
+
+    def update(self, delta_time):
+        """ Movement and game logic """
+        self.earth_angle += 1
+        self.moon_angle += 5
+        earth_center_x, earth_center_y = arcade.rotate_point(
+            self.sun_x + self.earth_dist, self.sun_y,
+            self.sun_x, self.sun_y, self.earth_angle)
+        self.moon_shape_list.center_x = earth_center_x
+        self.moon_shape_list.center_y = earth_center_y
+
+        self.earth_shape_list.angle = self.earth_angle
+        self.moon_shape_list.angle = self.moon_angle
+
+
+def main():
+    window = MyGame()
+    arcade.run()
+
+
+if __name__ == "__main__":
+    main()

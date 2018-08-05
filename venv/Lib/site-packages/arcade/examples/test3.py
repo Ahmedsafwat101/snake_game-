@@ -1,0 +1,7 @@
+import arcade
+arcade.open_window(800, 600, "Drawing Example")
+arcade.start_render()
+my_rect = arcade.create_rectangle(200, 200, 50, 50, (255, 255, 0), 3, 45)
+arcade.render(my_rect)
+arcade.finish_render()
+arcade.run()

@@ -1,0 +1,189 @@
+import pyglet
+import ctypes
+import pyglet.gl as gl
+from random import uniform
+
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+VIOLET = (255, 0, 255)
+
+
+class Color(object):
+
+    @staticmethod
+    def Random(a=1.0):
+        return Color(
+            uniform(0, 1),
+            uniform(0, 1),
+            uniform(0, 1),
+            a,
+        )
+
+    def __init__(self, r, g, b, a=1.0):
+        self.r = r
+        self.g = g
+        self.b = b
+        self.a = a
+
+    rgba = property(lambda self: (self.r, self.g, self.b, self.a))
+
+def start_render():
+
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+
+
+def set_viewport(left, right, bottom, top):
+
+    # gl.glViewport(0, 0, _window.height, _window.height)
+    gl.glMatrixMode(gl.GL_PROJECTION)
+    gl.glLoadIdentity()
+    gl.glOrtho(left, right, bottom, top, -1, 1)
+    gl.glMatrixMode(gl.GL_MODELVIEW)
+    gl.glLoadIdentity()
+
+
+def open_window(width, height, window_title):
+
+    window = pyglet.window.Window(width=width, height=height,
+                                  caption=window_title)
+    set_viewport(0, width - 1, 0, height - 1)
+    window.invalid = False
+
+    return window
+
+
+class VertexBuffer:
+
+    def __init__(self, vbo_id: gl.GLuint, size: float, draw_mode: int, vbo_color_id: gl.GLuint):
+        self.vbo_id = vbo_id
+        self.vbo_color_id = vbo_color_id
+        self.size = size
+        self.draw_mode = draw_mode
+        self.color = None
+        self.line_width = 0
+
+
+def get_rectangle_points(center_x: float, center_y: float, width: float,
+                         height: float):
+
+    x1 = -width / 2 + center_x
+    y1 = -height / 2 + center_y
+
+    x2 = width / 2 + center_x
+    y2 = -height / 2 + center_y
+
+    x3 = width / 2 + center_x
+    y3 = height / 2 + center_y
+
+    x4 = -width / 2 + center_x
+    y4 = height / 2 + center_y
+
+
+    data = [x1, y1,
+            x2, y2,
+            x3, y3,
+            x4, y4]
+
+    return data
+
+
+def create_filled_rectangles(point_list, colors) -> VertexBuffer:
+    """
+    This function creates multiple rectangle/quads using a vertex buffer object.
+    Creating the rectangles, and then later drawing it with ``render``
+    is faster than calling ``draw_rectangle``.
+    """
+
+    data = point_list
+
+    # print(data)
+    vbo_id = gl.GLuint()
+
+    gl.glGenBuffers(1, ctypes.pointer(vbo_id))
+
+    # Create a buffer with the data
+    # This line of code is a bit strange.
+    # (gl.GLfloat * len(data)) creates an array of GLfloats, one for each number
+    # (*data) initalizes the list with the floats. *data turns the list into a
+    # tuple.
+    gl_point_list = (gl.GLfloat * len(data))(*data)
+
+    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo_id)
+    gl.glBufferData(gl.GL_ARRAY_BUFFER, ctypes.sizeof(gl_point_list), gl_point_list,
+                    gl.GL_STATIC_DRAW)
+
+    shape_mode = gl.GL_QUADS
+
+
+    # Colors
+    vbo_color_id = gl.GLuint()
+    gl.glGenBuffers(1, ctypes.pointer(vbo_color_id))
+    gl_color_list = (gl.GLfloat * len(colors))(*colors)
+    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo_color_id);
+    gl.glBufferData(gl.GL_ARRAY_BUFFER, ctypes.sizeof(gl_color_list), gl_color_list, gl.GL_STATIC_DRAW);
+
+    shape = VertexBuffer(vbo_id, len(data) // 2, shape_mode, vbo_color_id)
+
+    return shape
+
+
+def render(shape):
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+    gl.glLoadIdentity()
+    gl.glEnableClientState(gl.GL_VERTEX_ARRAY)
+    gl.glEnableClientState(gl.GL_COLOR_ARRAY)
+    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, shape.vbo_id)
+    gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)
+    gl.glBindBuffer(gl.GL_ARRAY_BUFFER, shape.vbo_color_id)
+    gl.glColorPointer(4, gl.GL_FLOAT, 0, None)
+    gl.glDrawArrays(shape.draw_mode, 0, shape.size)
+
+
+class MyApp:
+    def __init__(self):
+        self.shape = None
+        self.window = None
+
+    def setup(self):
+        self.window = open_window(800, 600, "Test 2")
+
+        all_rect_points = []
+        colors = []
+
+        points = get_rectangle_points(100, 100, 50, 50)
+        all_rect_points.extend(points)
+        colors.extend([255, 0, 0, 255] * 4)
+
+        points = get_rectangle_points(200, 200, 50, 50)
+        all_rect_points.extend(points)
+        colors.extend([0, 255, 0, 255] * 4)
+
+        points = get_rectangle_points(300, 300, 50, 50)
+        all_rect_points.extend(points)
+        colors.extend([0, 0, 255, 255] * 4)
+
+        points = get_rectangle_points(400, 400, 50, 50)
+        all_rect_points.extend(points)
+        colors.extend([255, 0, 255, 255] * 4)
+
+        self.shape = create_filled_rectangles(all_rect_points, colors)
+
+        pyglet.clock.schedule_interval(self.draw, 1/60)
+
+    def draw(self, dt):
+        start_render()
+        render(self.shape)
+
+
+def main():
+    # This main function repeatedly updates the screen.
+    app = MyApp()
+    app.setup()
+
+    pyglet.app.run()
+
+
+main()

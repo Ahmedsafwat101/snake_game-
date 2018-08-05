@@ -1,0 +1,579 @@
+import pygame
+import random
+import sys
+import webbrowser
+from pygame.locals import *
+
+#             R    G    B
+
+White     =  (255, 255, 255)
+Black     =  (  0,   0,   0)
+RED       =  (255,   0,   0)
+GREEN     =  (  0, 255,   0)
+Green_Bright=(0  , 250,   0)
+DARKGREEN =  (  0, 155,   0)
+DARKGRAY  =  ( 40,  40,  40)
+Green_Darker=(0,   100,   0)
+Red_Bright=(255,    0,    0)
+Red_Darker=(100,    0,    0)
+Gray      =(128,   128, 128)
+Blue      =  (0 ,   0 ,  255)
+greenyellow= (46 ,  139, 87)
+BGCOLOR =     (107, 142, 35)
+
+#Global Variabels
+FPS = 10
+Screen_Width = 900
+Screen_Height = 600
+Cell_Size_of_screen = 20
+assert Screen_Width % Cell_Size_of_screen == 0
+assert Screen_Height % Cell_Size_of_screen == 0
+Cell_Width = int(Screen_Width / Cell_Size_of_screen)
+Cell_Height = int(Screen_Height / Cell_Size_of_screen)
+UP = 'up'
+DOWN = 'down'
+LEFT = 'left'
+RIGHT = 'right'
+HEAD = 0 # syntactic sugar: index of the worm's head
+
+#Hard_mood
+def Hard_mood():
+    global Frame_Per_Second_CLOCK, DISPLAY_SURF, BASICFONT
+    pygame.init()
+    background_run = pygame.image.load("grass.png").convert_alpha()
+    Frame_Per_Second_CLOCK = pygame.time.Clock()
+    DISPLAY_SURF = pygame.display.set_mode((Screen_Width, Screen_Height))
+    BASICFONT = pygame.font.Font('freesansbold.ttf', 20)
+    pygame.display.set_caption(' snake game')
+    Frame_Per_Second_CLOCK.tick()
+
+    def Game():
+        # Set a random start point.
+        screen.blit(background_image, [0, 0])
+        start_x = random.randint(5, Cell_Width - 6)
+        start_y = random.randint(5, Cell_Height - 6)
+        worm_Coords = [{'x': start_x, 'y': start_y},
+                       {'x': start_x - 1, 'y': start_y},
+                       {'x': start_x - 2, 'y': start_y}]
+        direction = RIGHT
+
+        # Start the apple in a random place.
+        apple = getRandomLocation(worm_Coords)
+        counter = 0
+        while True:  # main game loop
+            pre_direction = direction
+            for event in pygame.event.get():  # event handling loop
+                if event.type == QUIT:
+                    Exit()
+                elif event.type == KEYDOWN:
+                    if (event.key == K_LEFT) and direction != RIGHT:
+                        direction = LEFT
+                    elif (event.key == K_RIGHT) and direction != LEFT:
+                        direction = RIGHT
+                    elif (event.key == K_UP) and direction != DOWN:
+                        direction = UP
+                    elif (event.key == K_DOWN) and direction != UP:
+                        direction = DOWN
+                    elif event.key == K_ESCAPE:
+                        Exit()
+            # check if the shape has hit itself or the edge
+            if worm_Coords[HEAD]['x'] == -1 or worm_Coords[HEAD]['x'] == Cell_Width or worm_Coords[HEAD]['y'] == -1 or \
+                    worm_Coords[HEAD]['y'] == Cell_Height:
+                background_sound1 = pygame.mixer.Sound("snakecrash.wav")
+                pygame.mixer.music.load("snakecrash.wav")
+                pygame.mixer.Sound.play(background_sound1)
+                return  # game over
+
+            for wormBody in worm_Coords[1:]:
+                if wormBody['x'] == worm_Coords[HEAD]['x'] and wormBody['y'] == worm_Coords[HEAD]['y']:
+                    background_sound1 = pygame.mixer.Sound("snakecrash.wav")
+                    pygame.mixer.music.load("snakecrash.wav")
+                    pygame.mixer.Sound.play(background_sound1)
+                    return  # game over
+
+            # check if worm has eaten an apply
+            if worm_Coords[HEAD]['x'] == apple['x'] and worm_Coords[HEAD]['y'] == apple['y']:
+                background_sound2 = pygame.mixer.Sound("snakeeat.wav")
+                pygame.mixer.music.load("snakeeat.wav")
+                pygame.mixer.Sound.play(background_sound2)
+                # don't remove worm's tail segment
+                apple = getRandomLocation(worm_Coords)  # set a new apple somewhere
+                counter = counter + 1
+                if counter == 11 or counter == 21 or counter == 31 or counter == 41 or counter == 51 or counter == 61 or counter == 71:
+                    background_sound3 = pygame.mixer.Sound("oh.wav")
+                    pygame.mixer.music.load("oh.wav")
+                    pygame.mixer.Sound.play(background_sound3)
+                    Dtaw_score(counter + 1)
+
+            else:
+                del worm_Coords[-1]  # remove worm's tail segment
+
+            # move the worm by adding a segment in the direction it is moving
+            if not examine_direction(direction, pre_direction):
+                direction = pre_direction
+            if direction == UP:
+                newHead = {'x': worm_Coords[HEAD]['x'], 'y': worm_Coords[HEAD]['y'] - 1}
+            elif direction == DOWN:
+                newHead = {'x': worm_Coords[HEAD]['x'], 'y': worm_Coords[HEAD]['y'] + 1}
+            elif direction == LEFT:
+                newHead = {'x': worm_Coords[HEAD]['x'] - 1, 'y': worm_Coords[HEAD]['y']}
+            elif direction == RIGHT:
+                newHead = {'x': worm_Coords[HEAD]['x'] + 1, 'y': worm_Coords[HEAD]['y']}
+            worm_Coords.insert(0, newHead)
+            DISPLAY_SURF.fill(BGCOLOR)
+
+            if (
+                    counter == 11 or counter == 21 or counter == 31 or counter == 41 or counter == 51 or counter == 61 or counter == 71):
+                counter = counter + 2
+                Dtaw_score(counter)
+            if (counter) == 10 or (counter) == 20 or (counter) == 30 or (counter) == 40 or (counter) == 50 or (
+            counter) == 60 or (counter) == 80:
+                Dtaw_score(counter)
+                Draw_banana(apple)
+                pass
+            else:
+                Dtaw_apple(apple)
+                Dtaw_score(counter)
+            Dtaw_worm(worm_Coords)
+            # blocks()
+            pygame.display.update()
+            Frame_Per_Second_CLOCK.tick(FPS+10)
+    while True:
+        Game()
+        Show_Game()
+
+#Mediam_mood
+def Mediam_mood():
+    global Frame_Per_Second_CLOCK, DISPLAY_SURF, BASICFONT
+    pygame.init()
+    background_run = pygame.image.load("grass.png").convert_alpha()
+    Frame_Per_Second_CLOCK = pygame.time.Clock()
+    DISPLAY_SURF = pygame.display.set_mode((Screen_Width, Screen_Height))
+    BASICFONT = pygame.font.Font('freesansbold.ttf', 20)
+    pygame.display.set_caption(' snake game')
+    Frame_Per_Second_CLOCK.tick()
+
+    def Game():
+        # Set a random start point.
+        screen.blit(background_image, [0, 0])
+        start_x = random.randint(5, Cell_Width - 6)
+        start_y = random.randint(5, Cell_Height - 6)
+        worm_Coords = [{'x': start_x, 'y': start_y},
+                       {'x': start_x - 1, 'y': start_y},
+                       {'x': start_x - 2, 'y': start_y}]
+        direction = RIGHT
+
+        # Start the apple in a random place.
+        apple = getRandomLocation(worm_Coords)
+        counter = 0
+        while True:  # main game loop
+            pre_direction = direction
+            for event in pygame.event.get():  # event handling loop
+                if event.type == QUIT:
+                    Exit()
+                elif event.type == KEYDOWN:
+                    if (event.key == K_LEFT) and direction != RIGHT:
+                        direction = LEFT
+                    elif (event.key == K_RIGHT) and direction != LEFT:
+                        direction = RIGHT
+                    elif (event.key == K_UP) and direction != DOWN:
+                        direction = UP
+                    elif (event.key == K_DOWN) and direction != UP:
+                        direction = DOWN
+                    elif event.key == K_ESCAPE:
+                        Exit()
+            # check if the shape has hit itself or the edge
+            if worm_Coords[HEAD]['x'] == -1 or worm_Coords[HEAD]['x'] == Cell_Width or worm_Coords[HEAD]['y'] == -1 or \
+                    worm_Coords[HEAD]['y'] == Cell_Height:
+                background_sound1 = pygame.mixer.Sound("snakecrash.wav")
+                pygame.mixer.music.load("snakecrash.wav")
+                pygame.mixer.Sound.play(background_sound1)
+                return  # game over
+
+            for wormBody in worm_Coords[1:]:
+                if wormBody['x'] == worm_Coords[HEAD]['x'] and wormBody['y'] == worm_Coords[HEAD]['y']:
+                    background_sound1 = pygame.mixer.Sound("snakecrash.wav")
+                    pygame.mixer.music.load("snakecrash.wav")
+                    pygame.mixer.Sound.play(background_sound1)
+                    return  # game over
+
+            # check if worm has eaten an apply
+            if worm_Coords[HEAD]['x'] == apple['x'] and worm_Coords[HEAD]['y'] == apple['y']:
+                background_sound2 = pygame.mixer.Sound("snakeeat.wav")
+                pygame.mixer.music.load("snakeeat.wav")
+                pygame.mixer.Sound.play(background_sound2)
+                # don't remove worm's tail segment
+                apple = getRandomLocation(worm_Coords)  # set a new apple somewhere
+                counter = counter + 1
+                if counter == 11 or counter == 21 or counter == 31 or counter == 41 or counter == 51 or counter == 61 or counter == 71:
+                    background_sound3 = pygame.mixer.Sound("oh.wav")
+                    pygame.mixer.music.load("oh.wav")
+                    pygame.mixer.Sound.play(background_sound3)
+                    Dtaw_score(counter + 1)
+
+            else:
+                del worm_Coords[-1]  # remove worm's tail segment
+
+            # move the worm by adding a segment in the direction it is moving
+            if not examine_direction(direction, pre_direction):
+                direction = pre_direction
+            if direction == UP:
+                newHead = {'x': worm_Coords[HEAD]['x'], 'y': worm_Coords[HEAD]['y'] - 1}
+            elif direction == DOWN:
+                newHead = {'x': worm_Coords[HEAD]['x'], 'y': worm_Coords[HEAD]['y'] + 1}
+            elif direction == LEFT:
+                newHead = {'x': worm_Coords[HEAD]['x'] - 1, 'y': worm_Coords[HEAD]['y']}
+            elif direction == RIGHT:
+                newHead = {'x': worm_Coords[HEAD]['x'] + 1, 'y': worm_Coords[HEAD]['y']}
+            worm_Coords.insert(0, newHead)
+            DISPLAY_SURF.fill(BGCOLOR)
+
+            if (counter == 11 or counter == 21 or counter == 31 or counter == 41 or counter == 51 or counter == 61 or counter == 71):
+                counter = counter + 2
+                Dtaw_score(counter)
+
+            elif (counter) == 10 or (counter) == 20 or (counter) == 30 or (counter) == 40 or (counter) == 50 or (counter) == 60 or (counter) == 80:
+                Dtaw_score(counter)
+                Draw_banana(apple)
+
+            else:
+                Dtaw_apple(apple)
+                Dtaw_score(counter)
+            Dtaw_worm(worm_Coords)
+            pygame.display.update()
+            Frame_Per_Second_CLOCK.tick(FPS+5)
+
+    while True:
+        Game()
+        Show_Game()
+#Easy_mood
+def main():
+
+    global Frame_Per_Second_CLOCK, DISPLAY_SURF, BASICFONT
+    pygame.init()
+    background_run = pygame.image.load("grass.png").convert_alpha()
+    Frame_Per_Second_CLOCK = pygame.time.Clock()
+    DISPLAY_SURF = pygame.display.set_mode((Screen_Width, Screen_Height))
+    BASICFONT = pygame.font.Font('freesansbold.ttf', 20)
+    pygame.display.set_caption(' snake game')
+    while True:
+
+        Game()
+        Show_Game()
+
+
+
+def Game():
+    # Set a random start point.
+    screen.blit(background_image, [0, 0])
+    start_x = random.randint(5, Cell_Width - 6)
+    start_y = random.randint(5, Cell_Height - 6)
+    worm_Coords = [{'x': start_x,     'y': start_y},
+                  {'x': start_x - 1, 'y': start_y},
+                  {'x': start_x - 2, 'y': start_y}]
+    direction = RIGHT
+
+    # Start the apple in a random place.
+    apple = getRandomLocation(worm_Coords)
+    counter=0
+    while True: # main game loop
+        pre_direction = direction
+        for event in pygame.event.get(): # event handling loop
+            if event.type == QUIT:
+                Exit()
+            elif event.type == KEYDOWN:
+                if (event.key == K_LEFT ) and direction != RIGHT:
+                    direction = LEFT
+                elif (event.key == K_RIGHT  ) and direction != LEFT:
+                    direction = RIGHT
+                elif (event.key == K_UP ) and direction != DOWN:
+                    direction = UP
+                elif (event.key == K_DOWN ) and direction != UP:
+                    direction = DOWN
+                elif event.key == K_ESCAPE:
+                    Exit()
+        # check if the shape has hit itself or the edge
+        if worm_Coords[HEAD]['x'] == -1 or worm_Coords[HEAD]['x'] == Cell_Width or worm_Coords[HEAD]['y'] == -1 or worm_Coords[HEAD]['y'] == Cell_Height :
+            background_sound1 = pygame.mixer.Sound("snakecrash.wav")
+            pygame.mixer.music.load("snakecrash.wav")
+            pygame.mixer.Sound.play(background_sound1)
+            return # game over
+
+
+
+        for wormBody in worm_Coords[1:]:
+
+            if wormBody['x'] == worm_Coords[HEAD]['x'] and wormBody['y'] == worm_Coords[HEAD]['y']:
+                background_sound1 = pygame.mixer.Sound("snakecrash.wav")
+                pygame.mixer.music.load("snakecrash.wav")
+                pygame.mixer.Sound.play(background_sound1)
+                return # game over
+
+        # check if worm has eaten an apply
+        if worm_Coords[HEAD]['x'] == apple['x'] and worm_Coords[HEAD]['y'] == apple['y']:
+            background_sound2 = pygame.mixer.Sound("snakeeat.wav")
+            pygame.mixer.music.load("snakeeat.wav")
+            pygame.mixer.Sound.play(background_sound2)
+            # don't remove worm's tail segment
+            apple = getRandomLocation(worm_Coords) # set a new apple /somewhere
+            counter=counter+1
+            if counter==11 or counter==21 or counter==31 or counter==41 or counter==51 or counter== 61 or counter==71  :
+                background_sound3 = pygame.mixer.Sound("oh.wav")
+                pygame.mixer.music.load("oh.wav")
+                pygame.mixer.Sound.play(background_sound3)
+        else:
+            del worm_Coords[-1] # remove worm's tail segment
+
+        # move the worm by adding a segment in the direction it is moving
+        if not examine_direction(direction, pre_direction):
+            direction = pre_direction
+        if direction == UP:
+            newHead = {'x': worm_Coords[HEAD]['x'], 'y': worm_Coords[HEAD]['y'] - 1}
+        elif direction == DOWN:
+            newHead = {'x': worm_Coords[HEAD]['x'], 'y': worm_Coords[HEAD]['y'] + 1}
+        elif direction == LEFT:
+            newHead = {'x': worm_Coords[HEAD]['x'] - 1, 'y': worm_Coords[HEAD]['y']}
+        elif direction == RIGHT:
+            newHead = {'x': worm_Coords[HEAD]['x'] + 1, 'y': worm_Coords[HEAD]['y']}
+        worm_Coords.insert(0, newHead)
+        DISPLAY_SURF.fill(BGCOLOR)
+        if (counter==11 or counter==21 or counter==31 or counter==41 or counter==51 or counter== 61 or counter==71 ):
+            counter=counter+2
+            Dtaw_score(counter)
+        elif (counter)==10 or (counter)==20 or (counter)==30 or (counter)==40 or(counter)== 50 or (counter)==60 or (counter)==80 :
+            Dtaw_score(counter)
+            Draw_banana(apple)
+
+        else:
+            Dtaw_apple(apple)
+            Dtaw_score(counter)
+        Dtaw_worm(worm_Coords)
+        pygame.display.update()
+        Frame_Per_Second_CLOCK.tick(FPS)
+def examine_direction(temp , direction):
+    if direction == UP:
+        if temp == DOWN:
+            return False
+    elif direction == RIGHT:
+        if temp == LEFT:
+            return False
+    elif direction == LEFT:
+        if temp == RIGHT:
+            return False
+    elif direction == DOWN:
+        if temp == UP:
+            return False
+    return True
+
+def drawPressKeyMsg():
+
+    pressKeySurf = BASICFONT.render('Press any key to play.', True, Black)
+    pressKeyRect = pressKeySurf.get_rect()
+    pressKeyRect.topleft = (200,400)
+    DISPLAY_SURF.blit(pressKeySurf, pressKeyRect)
+
+
+def checkForKeyPress():
+    if len(pygame.event.get(QUIT)) > 0:
+        Exit()
+
+    keyUpEvents = pygame.event.get(KEYUP)
+    if len(keyUpEvents) == 0:
+        return None
+    if keyUpEvents[0].key == K_ESCAPE:
+        Exit()
+    return keyUpEvents[0].key
+
+def Exit():#to Exit the game.
+    background_sound1 = pygame.mixer.Sound("snakecrash.wav")
+    pygame.mixer.music.load("snakecrash.wav")
+    pygame.mixer.Sound.play(background_sound1)
+    pygame.quit()
+    sys.exit()
+
+def getRandomLocation(worm):
+    temp = {'x': random.randint(0, Cell_Width - 1), 'y': random.randint(0, Cell_Height - 1)}
+    while test_not_ok(temp, worm):
+        temp = {'x': random.randint(0, Cell_Width - 1), 'y': random.randint(0, Cell_Height - 1)}
+    return temp
+
+def test_not_ok(temp, worm):
+    for body in worm:
+        if temp['x'] == body['x'] and temp['y'] == body['y']:
+            return True
+    return False
+
+def Show_Game():
+    gameOverFont = pygame.font.Font('RemachineScript_Personal_Use.ttf', 150)
+    gameSurf = gameOverFont.render('Game', True, Black)
+    overSurf = gameOverFont.render('Over', True, Black)
+    gameRect = gameSurf.get_rect()
+    overRect = overSurf.get_rect()
+    gameRect.midtop = (Screen_Width / 2, 10)
+    overRect.midtop = (Screen_Width / 2, gameRect.height + 10 + 25)
+    DISPLAY_SURF.blit(gameSurf, gameRect)
+    DISPLAY_SURF.blit(overSurf, overRect)
+    drawPressKeyMsg()
+    pygame.display.update()
+    pygame.time.wait(500)
+    checkForKeyPress() # clear out any key presses in the event queue
+
+    while True:
+        if checkForKeyPress():
+            pygame.event.get() # clear event queue
+            return
+
+def Dtaw_score(score):
+    scoreSurf = BASICFONT.render('Score: %s' % (score), True, Black)
+    scoreRect = scoreSurf.get_rect()
+    scoreRect.topleft = (Screen_Width - 120, 10)
+    DISPLAY_SURF.blit(scoreSurf, scoreRect)
+    return scoreRect
+
+
+
+def Dtaw_worm(wormCoords):
+    for coord in wormCoords:
+        x = coord['x'] * Cell_Size_of_screen
+        y = coord['y'] * Cell_Size_of_screen
+        wormSegmentRect = pygame.Rect(x, y, Cell_Size_of_screen, Cell_Size_of_screen)
+        pygame.draw.rect(DISPLAY_SURF, greenyellow, wormSegmentRect)
+        wormInnerSegmentRect = pygame.Rect(x + 4, y + 4, Cell_Size_of_screen - 8, Cell_Size_of_screen - 8)
+        pygame.draw.rect(DISPLAY_SURF, GREEN, wormInnerSegmentRect)
+
+
+def Dtaw_apple(coord):
+    x = coord['x'] * Cell_Size_of_screen
+    y = coord['y'] * Cell_Size_of_screen
+    apple_ico=pygame.image.load("apple-icon.png").convert_alpha()
+    screen.blit(apple_ico, [x, y])
+    pygame.display.flip()
+
+def Draw_banana(coord):
+        x = coord['x'] * Cell_Size_of_screen
+        y = coord['y'] * Cell_Size_of_screen
+        apple_ico = pygame.image.load("banana-icon.png").convert_alpha()
+        screen.blit(apple_ico, [x, y])
+        pygame.display.flip()
+def blocks( ):
+
+    block_ico = pygame.image.load("block.png").convert_alpha()
+    screen.blit(block_ico, [10, 10])
+    screen.blit(block_ico, [200, 350])
+    screen.blit(block_ico, [280, 250])
+    screen.blit(block_ico, [300, 400])
+    screen.blit(block_ico, [500, 600])
+    pygame.display.flip()
+
+if __name__ == '_main_':
+    main()
+
+pygame.init()
+#functions
+
+def Text_Objects (text,font):
+    text_surface=font.render(text,True,Black)
+    return text_surface,text_surface.get_rect()
+
+def buttons(msg,x,y,w,h,bright,darker,action=None):
+    Mouse =pygame.mouse.get_pos()
+    Click =pygame.mouse.get_pressed()
+
+    if x+w>Mouse[0]>x and y+h>Mouse[1]>y:
+      pygame.draw.rect(screen,bright,(x,y,w,h))
+
+      if Click[0]==1 and action != None:
+          if action=="play":
+
+              Play_mood = pygame.display.set_mode([1000, 600])
+              Play_mood.fill((255, 255, 255))
+              pygame.display.set_caption("Snake Game")
+              done2 = False
+              background_image = pygame.image.load("back.png").convert_alpha()
+              ico = pygame.image.load("snake-icon.png").convert_alpha()
+
+              while not done2:
+                  for event in pygame.event.get():
+                      if event.type == pygame.QUIT:
+                          done2 = True
+                  screen.blit(background_image, [0, 0])
+                  pygame.display.flip()
+
+                  # buttons creation and interactions
+                  buttons("Esay", 60, 270, 200, 50, Green_Bright, Green_Darker, "Esay")
+                  buttons("Medium", 60, 370, 200, 50, Green_Bright, Green_Darker, "Medium")
+                  buttons("Hard", 60, 470, 200, 50,Green_Bright, Green_Darker, "Hard")
+          elif action=="Esay":
+              main()
+
+          elif action == "Medium":
+              Mediam_mood()
+
+          elif action == "Hard":
+             Hard_mood()
+
+          elif action== "About":
+              webbrowser.open_new(r'C:\Users\el aqsa\PycharmProjects\untitled4\description.pdf')
+              #***Help_mood = pygame.display.set_mode([1000, 600])
+              #Help_mood.fill((255, 255, 255))
+              #pygame.display.set_caption("How To PLAY")
+              #done3 = False
+              #background_image = pygame.image.load("back.png").convert_alpha()
+
+             # while not done3:
+                  #for event in pygame.event.get():
+                      #if event.type == pygame.QUIT:
+                          #done3 = True
+                  #screen.blit(background_image, [0, 0])
+                  # screen.blit(ima, [20, 20])
+                  # screen.blit(ico, [700, 300])
+                  #Font = pygame.font.Font('RemachineScript_Personal_Use.ttf', 60)
+                  #label = Font.render("Snake", 1, (0,0, 0))
+                  #screen.blit(label, (450, 20))
+                  #Font = pygame.font.Font('RemachineScript_Personal_Use.ttf', 45)
+                  #label = Font.render("Snake", 1, (0, 0, 0))
+                  #screen.blit(label, (20, 20))
+                  #pygame.display.flip()
+
+          elif action == "exit":
+              quit()
+
+    else:
+      pygame.draw.rect(screen, darker, (x, y, w, h))
+    intro_Text=pygame.font.Font("RemachineScript_Personal_Use.ttf",50)
+    text,textRect=Text_Objects(msg,intro_Text)
+    textRect.center = (x + (w / 2), y + (h / 2))
+    screen.blit(text , textRect)
+
+
+#sound
+background_sound=pygame.mixer.Sound("sound.wav")
+pygame.mixer.music.load("sound.wav")
+pygame.mixer.Sound.play(background_sound,-1)
+
+screen = pygame.display.set_mode([1000, 600])
+screen.fill((255, 255, 255))
+pygame.display.set_caption("Snake Game")
+done = False
+background_image=pygame.image.load("back.png").convert_alpha()
+ico=pygame.image.load("about.png").convert_alpha()
+ico1=pygame.image.load("play1.png").convert_alpha()
+ico2=pygame.image.load("exit1.png").convert_alpha()
+
+while not done:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            done = True
+    screen.blit(background_image,[0,0])
+    screen.blit(ico, [215, 382])
+    screen.blit(ico1, [215, 282])
+    screen.blit(ico2, [215, 478])
+
+    pygame.display.flip()
+
+    #buttons creation and interactions
+    buttons ("Play", 60, 270, 200, 50,  Green_Bright, Green_Darker,"play")
+    buttons("About", 60, 370, 200, 50, White, Gray,"About")
+    buttons("Exit",60, 470, 200, 50, Red_Bright, Red_Darker,"exit")
+
+

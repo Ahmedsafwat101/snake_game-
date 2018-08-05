@@ -1,0 +1,56 @@
+"""A lot of constants for everyday life: colors, anchors..."""
+import os
+
+GUI_PATH = os.path.dirname(__file__)
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (30, 144, 255)
+TRUE_BLUE = (0, 0, 255)
+PURPLE = (155, 89, 182)
+RED = (255, 0, 0)
+GREEN = (60, 179, 113)
+DK_GREEN = (46, 139, 87)
+ORANGE = (230, 140, 30)
+GREY = (128, 128, 128)
+LIGHT_GREY = (192, 192, 192)
+PINK = (255, 51, 153)
+FLASH_GREEN = (153, 255, 0)
+
+# from https://flatuicolors.com/ :D
+TURQUOISE = (26, 188, 156)
+YELLOW = (241, 196, 15)
+CONCRETE = (149, 165, 166)
+PUMPKIN = (211, 84, 0)
+NICE_BLUE = (52, 152, 219)
+MIDNIGHT_BLUE = (44, 62, 80)
+
+
+COLORS = [
+    BLACK, WHITE, GREY, LIGHT_GREY, CONCRETE,
+    BLUE, TRUE_BLUE, TURQUOISE, NICE_BLUE, MIDNIGHT_BLUE,
+    PURPLE,
+    RED, PINK,
+    GREEN, DK_GREEN, FLASH_GREEN,
+    ORANGE, YELLOW, PUMPKIN
+]
+
+
+CENTER = 'center'
+TOPLEFT = 'topleft'
+BOTTOMLEFT = 'bottomleft'
+TOPRIGHT = 'topright'
+BOTTOMRIGHT = 'bottomright'
+MIDTOP = 'midtop'
+MIDLEFT = 'midleft'
+MIDBOTTOM = 'midbottom'
+MIDRIGHT = 'midright'
+
+ROUNDED = 'rounded'
+FLAT = 'flat'
+
+
+__all__ = ['BLACK', 'WHITE', 'BLUE', 'NICE_BLUE', 'TRUE_BLUE', 'GUI_PATH', 'PURPLE', 'GREEN', 'RED', 'DK_GREEN', 'ORANGE',
+           'GREY', 'LIGHT_GREY', 'CENTER', 'TOPLEFT', 'BOTTOMLEFT', 'TOPRIGHT', 'MIDTOP', 'MIDRIGHT', 'MIDLEFT',
+           'MIDBOTTOM', 'BOTTOMRIGHT', 'PINK', 'COLORS', 'YELLOW', 'TURQUOISE', 'ROUNDED', 'FLAT', 'CONCRETE',
+           'PUMPKIN', 'FLASH_GREEN', 'MIDNIGHT_BLUE']
